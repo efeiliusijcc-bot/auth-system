@@ -41,7 +41,7 @@ AUTH_ADMIN_BASE_URL=https://auth-admin.company.local
 OPENCLAW_BASE_URL=https://openclaw.company.local
 ```
 
-注意：OIDC 的 issuer、callback、Keycloak hostname 必须和浏览器实际访问 URL 完全一致；非标准端口时 `*_BASE_URL` 必须带端口。
+注意：OIDC 的 issuer、callback、Keycloak hostname 必须和浏览器实际访问 URL 完全一致；非标准端口时 `*_BASE_URL` 必须带端口。`OAUTH2_PROXY_COOKIE_SECRET` 使用 32 字符随机字符串，例如 `openssl rand -hex 16`。
 
 ## 前置条件
 
