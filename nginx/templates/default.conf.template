@@ -8,6 +8,13 @@ log_format auth_log '$remote_addr - $auth_email [$time_local] '
                     '"$http_referer" "$http_user_agent" '
                     'upstream=$upstream_addr request_time=$request_time';
 
+map $host $https_redirect_base {
+    default https://$host;
+    ${OPENCLAW_DOMAIN} ${OPENCLAW_BASE_URL};
+    ${AUTH_DOMAIN} ${AUTH_BASE_URL};
+    ${AUTH_ADMIN_DOMAIN} ${AUTH_ADMIN_BASE_URL};
+}
+
 server {
     listen 80;
     server_name ${OPENCLAW_DOMAIN} ${AUTH_DOMAIN} ${AUTH_ADMIN_DOMAIN};
@@ -19,7 +26,7 @@ server {
     }
 
     location / {
-        return 301 https://$host$request_uri;
+        return 301 $https_redirect_base$request_uri;
     }
 }
 
@@ -126,4 +133,3 @@ server {
         proxy_set_header X-Forwarded-Port 443;
     }
 }
-

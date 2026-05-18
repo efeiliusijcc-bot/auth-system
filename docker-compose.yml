@@ -29,8 +29,8 @@ services:
       KC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       KC_DB_USERNAME: ${POSTGRES_USER}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
-      KC_HOSTNAME: https://${AUTH_DOMAIN}
-      KC_HOSTNAME_ADMIN: https://${AUTH_ADMIN_DOMAIN}
+      KC_HOSTNAME: ${AUTH_BASE_URL}
+      KC_HOSTNAME_ADMIN: ${AUTH_ADMIN_BASE_URL}
       KC_PROXY_HEADERS: xforwarded
       KC_HTTP_ENABLED: "true"
       KC_HEALTH_ENABLED: "true"
@@ -59,8 +59,8 @@ services:
       - --provider=keycloak-oidc
       - --client-id=${KEYCLOAK_CLIENT_ID}
       - --client-secret=${KEYCLOAK_CLIENT_SECRET}
-      - --redirect-url=https://${OPENCLAW_DOMAIN}/oauth2/callback
-      - --oidc-issuer-url=https://${AUTH_DOMAIN}/realms/company
+      - --redirect-url=${OPENCLAW_BASE_URL}/oauth2/callback
+      - --oidc-issuer-url=${AUTH_BASE_URL}/realms/company
       - --email-domain=*
       - --allowed-group=/openclaw-users
       - --http-address=0.0.0.0:4180
@@ -101,6 +101,9 @@ services:
       AUTH_DOMAIN: ${AUTH_DOMAIN}
       AUTH_ADMIN_DOMAIN: ${AUTH_ADMIN_DOMAIN}
       OPENCLAW_DOMAIN: ${OPENCLAW_DOMAIN}
+      AUTH_BASE_URL: ${AUTH_BASE_URL}
+      AUTH_ADMIN_BASE_URL: ${AUTH_ADMIN_BASE_URL}
+      OPENCLAW_BASE_URL: ${OPENCLAW_BASE_URL}
       OPENCLAW_UPSTREAM: ${OPENCLAW_UPSTREAM}
       TLS_CERT_FILE: ${TLS_CERT_FILE}
       TLS_KEY_FILE: ${TLS_KEY_FILE}
@@ -134,4 +137,3 @@ networks:
 volumes:
   postgres-data:
   nginx-logs:
-
