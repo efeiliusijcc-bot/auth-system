@@ -40,15 +40,15 @@
       "serviceAccountsEnabled": false,
       "frontchannelLogout": true,
       "redirectUris": [
-        "https://openclaw.company.local/oauth2/callback"
+        "OPENCLAW_BASE_URL_PLACEHOLDER/oauth2/callback"
       ],
       "webOrigins": [
-        "https://openclaw.company.local"
+        "OPENCLAW_BASE_URL_PLACEHOLDER"
       ],
       "attributes": {
         "oauth2.device.authorization.grant.enabled": "false",
         "oidc.ciba.grant.enabled": "false",
-        "post.logout.redirect.uris": "https://openclaw.company.local/*"
+        "post.logout.redirect.uris": "OPENCLAW_BASE_URL_PLACEHOLDER/*"
       },
       "protocolMappers": [
         {
@@ -135,4 +135,3 @@
   "adminEventsEnabled": true,
   "adminEventsDetailsEnabled": true
 }
-

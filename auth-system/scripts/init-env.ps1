@@ -28,7 +28,9 @@ Set-Content -LiteralPath $target -Value $content -Encoding UTF8
 $realmTemplatePath = Join-Path $root "keycloak\company-realm.template.json"
 $realmPath = Join-Path $root "keycloak\realm-export\company-realm.json"
 $realm = Get-Content -LiteralPath $realmTemplatePath -Raw
+$openClawBaseUrl = (($content -split "`n") | Where-Object { $_ -match '^OPENCLAW_BASE_URL=' } | Select-Object -First 1) -replace '^OPENCLAW_BASE_URL=', ''
 $realm = $realm.Replace("CHANGE_ME_OPENCLAW_AUTH_PROXY_SECRET", $clientSecret)
+$realm = $realm.Replace("OPENCLAW_BASE_URL_PLACEHOLDER", $openClawBaseUrl.Trim())
 Set-Content -LiteralPath $realmPath -Value $realm -Encoding UTF8
 
 Write-Host "Created $target"

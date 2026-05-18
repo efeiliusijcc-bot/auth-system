@@ -4,9 +4,9 @@
 
 默认访问链路：
 
-1. 用户访问 `https://openclaw.company.local`。
+1. 用户访问 `OPENCLAW_BASE_URL`。
 2. Nginx 通过 `auth_request` 调用 oauth2-proxy。
-3. oauth2-proxy 跳转到 `https://auth.company.local` 的 Keycloak Realm 登录。
+3. oauth2-proxy 跳转到 `AUTH_BASE_URL` 的 Keycloak Realm 登录。
 4. 登录且属于 `/openclaw-users` 后，Nginx 代理到 OpenClaw 上游。
 
 ## 目录结构
@@ -18,6 +18,30 @@
 - `keycloak/realm-export/`：初始化脚本生成的 Keycloak 导入目录，真实 JSON 不入库。
 - `scripts/`：初始化、证书生成、配置校验和端点验收脚本。
 - `certs/`：放置 `openclaw.crt` 和 `openclaw.key`，证书私钥不入库。
+
+## 端口规避
+
+默认配置使用宿主机 `18081/18443`，避免覆盖服务器已有的 80/443 Nginx：
+
+```text
+HTTP_PORT=18081
+HTTPS_PORT=18443
+AUTH_BASE_URL=https://auth.company.local:18443
+AUTH_ADMIN_BASE_URL=https://auth-admin.company.local:18443
+OPENCLAW_BASE_URL=https://openclaw.company.local:18443
+```
+
+如果部署机 80/443 空闲，可改回：
+
+```text
+HTTP_PORT=80
+HTTPS_PORT=443
+AUTH_BASE_URL=https://auth.company.local
+AUTH_ADMIN_BASE_URL=https://auth-admin.company.local
+OPENCLAW_BASE_URL=https://openclaw.company.local
+```
+
+注意：OIDC 的 issuer、callback、Keycloak hostname 必须和浏览器实际访问 URL 完全一致；非标准端口时 `*_BASE_URL` 必须带端口。
 
 ## 前置条件
 
@@ -34,8 +58,13 @@
 在本目录执行：
 
 ```powershell
-Copy-Item .env.example .env
 .\scripts\init-env.ps1 -Force
+```
+
+Ubuntu/Linux：
+
+```bash
+sh scripts/init-env.sh --force
 ```
 
 然后编辑：
@@ -43,15 +72,7 @@ Copy-Item .env.example .env
 - `.env`：确认域名、端口、`OPENCLAW_UPSTREAM`、管理员网段和密钥。
 - `keycloak\realm-export\company-realm.json`：把 `CHANGE_ME_TEST_USER_PASSWORD` 替换成临时测试密码，或删除 `users` 数组后启动再手工创建用户。
 
-如果在 Linux 上部署，可手工生成密钥：
-
-```bash
-cp .env.example .env
-openssl rand -base64 32
-openssl rand -hex 32
-```
-
-将生成值分别写入 `.env` 的 `OAUTH2_PROXY_COOKIE_SECRET` 和 `KEYCLOAK_CLIENT_SECRET`，并同步替换 `keycloak/realm-export/company-realm.json` 里的 client secret。
+如果修改了 `OPENCLAW_BASE_URL`，需要重新执行 `.\scripts\init-env.ps1 -Force`，或同步修改 `keycloak/realm-export/company-realm.json` 中的 redirect URI。
 
 ## 证书
 
@@ -71,11 +92,7 @@ certs/openclaw.key
 或在 Linux 上：
 
 ```bash
-openssl req -x509 -nodes -newkey rsa:2048 -days 730 \
-  -keyout certs/openclaw.key \
-  -out certs/openclaw.crt \
-  -subj "/CN=openclaw.company.local" \
-  -addext "subjectAltName=DNS:openclaw.company.local,DNS:auth.company.local,DNS:auth-admin.company.local"
+sh scripts/generate-self-signed-cert.sh
 ```
 
 浏览器和 oauth2-proxy 需要信任该证书链。实验环境可临时设置 `OAUTH2_PROXY_SSL_INSECURE_SKIP_VERIFY=true`，正式环境保持 `false`。
@@ -111,31 +128,21 @@ docker compose logs -f nginx
 OPENCLAW_UPSTREAM=http://host.docker.internal:18789
 ```
 
-如果 OpenClaw 也在同一个 Docker Compose 网络中，改为对应服务名，例如：
+如果 OpenClaw 在宿主机 `127.0.0.1:18789`，Linux Docker 通过 `host-gateway` 可用上述默认值。
 
-```text
-OPENCLAW_UPSTREAM=http://openclaw:18789
-```
-
-安全边界要求：普通用户网段不能直接访问 OpenClaw 真实端口，只能访问 `https://openclaw.company.local`。
+安全边界要求：普通用户网段不能直接访问 OpenClaw 真实端口，只能访问 `OPENCLAW_BASE_URL`。
 
 ## 验收
 
-基础验收：
+使用默认高端口和自签证书时：
 
 ```powershell
-.\scripts\verify-endpoints.ps1
-```
-
-使用自签证书时：
-
-```powershell
-.\scripts\verify-endpoints.ps1 -SkipCertificateCheck
+.\scripts\verify-endpoints.ps1 -OpenClawUrl https://openclaw.company.local:18443 -AuthUrl https://auth.company.local:18443 -SkipCertificateCheck
 ```
 
 人工验收项：
 
-- 未登录访问 `https://openclaw.company.local`，跳转 Keycloak。
+- 未登录访问 `OPENCLAW_BASE_URL`，跳转 Keycloak。
 - `openclaw.user` 或其他 `/openclaw-users` 成员登录后进入 OpenClaw。
 - 非 `/openclaw-users` 用户登录后被拒绝。
 - 刷新页面不重复登录。
@@ -145,9 +152,9 @@ OPENCLAW_UPSTREAM=http://openclaw:18789
 
 ## 常见问题
 
-OIDC issuer 或 redirect_uri 报错：
+OIDC issuer 或 redirect URI 报错：
 
-- 检查 `.env` 域名是否与 `keycloak/realm-export/company-realm.json` 中的 redirect URI 一致。
+- 检查 `.env` 的 `*_BASE_URL` 是否与 `keycloak/realm-export/company-realm.json` 中的 redirect URI 一致。
 - 检查 `AUTH_DOMAIN` 是否能从浏览器和容器内访问。
 
 用户组授权不生效：
@@ -166,4 +173,3 @@ WebSocket 失败：
 
 - `auth-admin.company.local` 默认只允许 `.env` 中 `ADMIN_ALLOWED_CIDR` 指定的网段。
 - 不要把 Keycloak 9000 健康检查端口暴露给普通用户。
-
