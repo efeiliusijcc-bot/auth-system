@@ -95,7 +95,7 @@ services:
     container_name: auth-nginx
     restart: unless-stopped
     depends_on:
-      oauth2-proxy:
+      keycloak:
         condition: service_healthy
     environment:
       AUTH_DOMAIN: ${AUTH_DOMAIN}
