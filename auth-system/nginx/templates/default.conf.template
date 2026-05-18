@@ -15,6 +15,8 @@ map $host $https_redirect_base {
     ${AUTH_ADMIN_DOMAIN} ${AUTH_ADMIN_BASE_URL};
 }
 
+resolver 127.0.0.11 valid=10s ipv6=off;
+
 server {
     listen 80;
     server_name ${OPENCLAW_DOMAIN} ${AUTH_DOMAIN} ${AUTH_ADMIN_DOMAIN};
@@ -42,7 +44,8 @@ server {
     error_log /var/log/nginx/openclaw_error.log warn;
 
     location /oauth2/ {
-        proxy_pass http://oauth2-proxy:4180;
+        set $oauth2_proxy_upstream http://oauth2-proxy:4180;
+        proxy_pass $oauth2_proxy_upstream;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -52,7 +55,8 @@ server {
 
     location = /oauth2/auth {
         internal;
-        proxy_pass http://oauth2-proxy:4180;
+        set $oauth2_proxy_upstream http://oauth2-proxy:4180;
+        proxy_pass $oauth2_proxy_upstream;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
