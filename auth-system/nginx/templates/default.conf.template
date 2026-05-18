@@ -1,0 +1,129 @@
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
+log_format auth_log '$remote_addr - $auth_email [$time_local] '
+                    '"$request" $status $body_bytes_sent '
+                    '"$http_referer" "$http_user_agent" '
+                    'upstream=$upstream_addr request_time=$request_time';
+
+server {
+    listen 80;
+    server_name ${OPENCLAW_DOMAIN} ${AUTH_DOMAIN} ${AUTH_ADMIN_DOMAIN};
+
+    location = /healthz {
+        access_log off;
+        add_header Content-Type text/plain;
+        return 200 'ok\n';
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl http2;
+    server_name ${OPENCLAW_DOMAIN};
+
+    ssl_certificate ${TLS_CERT_FILE};
+    ssl_certificate_key ${TLS_KEY_FILE};
+    include /etc/nginx/snippets/ssl.conf;
+
+    access_log /var/log/nginx/openclaw_access.log auth_log;
+    error_log /var/log/nginx/openclaw_error.log warn;
+
+    location /oauth2/ {
+        proxy_pass http://oauth2-proxy:4180;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Auth-Request-Redirect $request_uri;
+    }
+
+    location = /oauth2/auth {
+        internal;
+        proxy_pass http://oauth2-proxy:4180;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-Uri $request_uri;
+        proxy_set_header Content-Length "";
+        proxy_pass_request_body off;
+    }
+
+    location / {
+        auth_request /oauth2/auth;
+        error_page 401 = /oauth2/start;
+
+        auth_request_set $auth_user  $upstream_http_x_auth_request_user;
+        auth_request_set $auth_email $upstream_http_x_auth_request_email;
+        auth_request_set $auth_group $upstream_http_x_auth_request_groups;
+
+        proxy_set_header X-Auth-Request-User $auth_user;
+        proxy_set_header X-Auth-Request-Email $auth_email;
+        proxy_set_header X-Auth-Request-Groups $auth_group;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Real-IP $remote_addr;
+
+        proxy_pass ${OPENCLAW_UPSTREAM};
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+}
+
+server {
+    listen 443 ssl http2;
+    server_name ${AUTH_DOMAIN};
+
+    ssl_certificate ${TLS_CERT_FILE};
+    ssl_certificate_key ${TLS_KEY_FILE};
+    include /etc/nginx/snippets/ssl.conf;
+
+    access_log /var/log/nginx/keycloak_access.log;
+    error_log /var/log/nginx/keycloak_error.log warn;
+
+    location / {
+        proxy_pass http://keycloak:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port 443;
+    }
+}
+
+server {
+    listen 443 ssl http2;
+    server_name ${AUTH_ADMIN_DOMAIN};
+
+    ssl_certificate ${TLS_CERT_FILE};
+    ssl_certificate_key ${TLS_KEY_FILE};
+    include /etc/nginx/snippets/ssl.conf;
+
+    access_log /var/log/nginx/keycloak_admin_access.log;
+    error_log /var/log/nginx/keycloak_admin_error.log warn;
+
+    allow ${ADMIN_ALLOWED_CIDR};
+    deny all;
+
+    location / {
+        proxy_pass http://keycloak:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port 443;
+    }
+}
+

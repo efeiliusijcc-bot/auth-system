@@ -1,0 +1,9 @@
+.env
+certs/*.crt
+certs/*.key
+certs/*.pem
+!certs/.gitkeep
+keycloak/realm-export/*.json
+!keycloak/realm-export/.gitkeep
+nginx/logs/
+*.log

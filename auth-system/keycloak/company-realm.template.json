@@ -1,0 +1,138 @@
+{
+  "realm": "company",
+  "enabled": true,
+  "displayName": "Company Internal Auth",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "verifyEmail": false,
+  "sslRequired": "external",
+  "groups": [
+    {
+      "name": "openclaw-users"
+    },
+    {
+      "name": "openclaw-admins"
+    },
+    {
+      "name": "report-users"
+    },
+    {
+      "name": "devops-users"
+    },
+    {
+      "name": "auth-admins"
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "openclaw-auth-proxy",
+      "name": "OpenClaw oauth2-proxy",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "CHANGE_ME_OPENCLAW_AUTH_PROXY_SECRET",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "frontchannelLogout": true,
+      "redirectUris": [
+        "https://openclaw.company.local/oauth2/callback"
+      ],
+      "webOrigins": [
+        "https://openclaw.company.local"
+      ],
+      "attributes": {
+        "oauth2.device.authorization.grant.enabled": "false",
+        "oidc.ciba.grant.enabled": "false",
+        "post.logout.redirect.uris": "https://openclaw.company.local/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "full.path": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "claim.name": "groups"
+          }
+        },
+        {
+          "name": "preferred username",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "username",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "preferred_username",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "email",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "email",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "email",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "openclaw.user",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "openclaw.user@company.local",
+      "firstName": "OpenClaw",
+      "lastName": "User",
+      "groups": [
+        "/openclaw-users"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "CHANGE_ME_TEST_USER_PASSWORD",
+          "temporary": true
+        }
+      ]
+    },
+    {
+      "username": "blocked.user",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "blocked.user@company.local",
+      "firstName": "Blocked",
+      "lastName": "User",
+      "groups": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "CHANGE_ME_TEST_USER_PASSWORD",
+          "temporary": true
+        }
+      ]
+    }
+  ],
+  "eventsEnabled": true,
+  "adminEventsEnabled": true,
+  "adminEventsDetailsEnabled": true
+}
+
