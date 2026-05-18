@@ -12,13 +12,13 @@ if ((Test-Path -LiteralPath $target) -and -not $Force) {
     throw "$target already exists. Use -Force to overwrite it."
 }
 
-$cookieSecret = openssl rand -base64 32
+$cookieSecret = openssl rand -hex 16
 $clientSecret = openssl rand -hex 32
 $postgresPassword = openssl rand -base64 24
 $adminPassword = openssl rand -base64 24
 
 $content = Get-Content -LiteralPath $example -Raw
-$content = $content.Replace("CHANGE_ME_32_BYTE_BASE64_COOKIE_SECRET", $cookieSecret)
+$content = $content.Replace("CHANGE_ME_32_CHAR_COOKIE_SECRET", $cookieSecret)
 $content = $content.Replace("CHANGE_ME_OPENCLAW_AUTH_PROXY_SECRET", $clientSecret)
 $content = $content.Replace("CHANGE_ME_POSTGRES_PASSWORD", $postgresPassword)
 $content = $content.Replace("CHANGE_ME_KEYCLOAK_ADMIN_PASSWORD", $adminPassword)
