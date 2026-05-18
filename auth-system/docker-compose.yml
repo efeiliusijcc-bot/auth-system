@@ -39,7 +39,7 @@ services:
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
     command: ["start", "--import-realm"]
     volumes:
-      - ./keycloak/realm-export:/opt/keycloak/data/import:ro
+      - ./keycloak/realm-export/company-realm.json:/opt/keycloak/data/import/company-realm.json:ro
     networks:
       - auth-internal
     healthcheck:
