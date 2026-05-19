@@ -2,7 +2,7 @@
 set -euo pipefail
 
 AUTH_DOMAIN="auth.company.test-link.xin"
-AUTH_ADMIN_DOMAIN="auth-admin.company.test-link.xin"
+AUTH_ADMIN_DOMAIN="auth-admin.test-link.xin"
 OPENCLAW_DOMAIN="openclaw.company.test-link.xin"
 
 getent hosts "$AUTH_DOMAIN" "$AUTH_ADMIN_DOMAIN" "$OPENCLAW_DOMAIN" || true
@@ -20,4 +20,3 @@ sed -i \
   .env
 
 grep -E '^(AUTH_DOMAIN|AUTH_ADMIN_DOMAIN|OPENCLAW_DOMAIN|AUTH_BASE_URL|AUTH_ADMIN_BASE_URL|OPENCLAW_BASE_URL|HTTP_PORT|HTTPS_PORT)' .env
-
