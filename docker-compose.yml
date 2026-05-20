@@ -61,6 +61,7 @@ services:
       - --client-secret=${KEYCLOAK_CLIENT_SECRET}
       - --redirect-url=${OPENCLAW_BASE_URL}/oauth2/callback
       - --oidc-issuer-url=${AUTH_BASE_URL}/realms/company
+      - --scope=openid email profile
       - --email-domain=*
       - --allowed-group=/openclaw-users
       - --http-address=0.0.0.0:4180
