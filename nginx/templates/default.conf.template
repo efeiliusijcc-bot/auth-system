@@ -40,6 +40,10 @@ server {
     ssl_certificate_key ${TLS_KEY_FILE};
     include /etc/nginx/snippets/ssl.conf;
 
+    proxy_buffer_size 32k;
+    proxy_buffers 8 64k;
+    proxy_busy_buffers_size 128k;
+
     access_log /var/log/nginx/openclaw_access.log auth_log;
     error_log /var/log/nginx/openclaw_error.log warn;
 
@@ -99,6 +103,10 @@ server {
     ssl_certificate_key ${TLS_KEY_FILE};
     include /etc/nginx/snippets/ssl.conf;
 
+    proxy_buffer_size 32k;
+    proxy_buffers 8 64k;
+    proxy_busy_buffers_size 128k;
+
     access_log /var/log/nginx/keycloak_access.log;
     error_log /var/log/nginx/keycloak_error.log warn;
 
@@ -120,6 +128,10 @@ server {
     ssl_certificate ${TLS_CERT_FILE};
     ssl_certificate_key ${TLS_KEY_FILE};
     include /etc/nginx/snippets/ssl.conf;
+
+    proxy_buffer_size 32k;
+    proxy_buffers 8 64k;
+    proxy_busy_buffers_size 128k;
 
     access_log /var/log/nginx/keycloak_admin_access.log;
     error_log /var/log/nginx/keycloak_admin_error.log warn;
